@@ -3,113 +3,151 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bruce Flasher</title>
+  <title>ESP Web Flasher</title>
 
   <!-- JetBrains Mono -->
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
 
-  <!-- TGS Player -->
-  <script src="https://unpkg.com/@telegram-web-apps/tgs-player"></script>
-
-  <!-- ESP Web Flasher Core -->
+  <!-- ESP Web Flasher -->
   <script type="module" src="https://unpkg.com/esp-web-flasher@8.0.1/dist/webflasher.js?module"></script>
+
+  <!-- Lottie for animated sticker -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.12.2/lottie.min.js"></script>
 
   <style>
     body {
-      background: #1e1e1e;
+      background: #111;
       color: #fff;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: "JetBrains Mono", monospace;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100vh;
-      margin: 0;
       text-align: center;
-    }
-
-    tgs-player {
-      width: 200px;
-      height: 200px;
-      margin-bottom: 20px;
+      margin: 0;
+      overflow: hidden;
     }
 
     h2 {
       font-weight: 400;
       font-size: 20px;
-      margin: 10px 0 30px 0;
+      margin-bottom: 25px;
     }
 
-    input[type="file"], button {
-      background-color: #222;
+    /* Custom file input */
+    .file-label {
+      display: inline-block;
+      background: #222;
       border: 1px solid #444;
-      color: white;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 14px;
-      padding: 10px 20px;
+      padding: 10px 25px;
       border-radius: 10px;
       cursor: pointer;
-      margin: 5px;
-      transition: background-color 0.2s ease;
+      transition: 0.2s ease;
+      font-size: 14px;
     }
 
-    input[type="file"]:hover, button:hover {
-      background-color: #333;
+    .file-label:hover {
+      background: #333;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    button {
+      background: #222;
+      border: 1px solid #444;
+      color: white;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 14px;
+      padding: 10px 25px;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: 0.2s ease;
+    }
+
+    button:hover {
+      background: #333;
+    }
+
+    #sticker {
+      width: 150px;
+      height: 150px;
+      margin-bottom: 10px;
     }
 
     footer {
       position: absolute;
       bottom: 20px;
       font-size: 12px;
-      color: #aaa;
+      color: #777;
     }
     footer span {
-      color: #ff4b4b;
+      color: #ff5050;
     }
   </style>
 </head>
 <body>
+  <div id="sticker"></div>
+  <h2>ESP Web Flasher</h2>
 
-  <tgs-player src="sticker.json" autoplay loop></tgs-player>
-  <h2>Let’s install firmware on yo device! 😎</h2>
-
+  <label for="firmwareFile" class="file-label">📁 Select firmware (.bin)</label>
   <input type="file" id="firmwareFile" accept=".bin" />
-  <button id="flashBtn" disabled>Install firmware!</button>
+  <button id="flashBtn" disabled>Flash Device</button>
 
   <footer>
-    Made with <span>❤</span> by bakedtoastplease | Works with ESP Web Flasher 💾
+    Made with <span>❤</span> by bakedtoastplease
   </footer>
 
   <script type="module">
     import { FlashClient } from "https://unpkg.com/esp-web-flasher@8.0.1/dist/webflasher.js";
 
+    // Lottie init
+    const anim = lottie.loadAnimation({
+      container: document.getElementById("sticker"),
+      renderer: "svg",
+      loop: true,
+      autoplay: true,
+      path: "sticker.json", // твой файл Lottie / Telegram sticker
+    });
+
     const fileInput = document.getElementById("firmwareFile");
     const flashBtn = document.getElementById("flashBtn");
-
+    const fileLabel = document.querySelector(".file-label");
     let firmwareData = null;
 
     fileInput.addEventListener("change", async (e) => {
       const file = e.target.files[0];
       if (!file) return;
       firmwareData = new Uint8Array(await file.arrayBuffer());
+      fileLabel.textContent = "✅ " + file.name;
       flashBtn.disabled = false;
     });
 
     flashBtn.addEventListener("click", async () => {
       try {
         flashBtn.innerText = "Connecting...";
+        anim.playSegments([0, 60], true);
+
         const port = await navigator.serial.requestPort();
         const transport = new Transport(port);
         const client = new FlashClient(transport, console);
 
         await client.initialize();
         flashBtn.innerText = "Flashing...";
-        await client.flash(firmwareData, 0x1000); // стандартный offset
+        anim.playSegments([60, 120], true);
+
+        await client.flash(firmwareData, 0x1000);
         await client.finish();
+
         flashBtn.innerText = "✅ Done!";
-      } catch (e) {
-        console.error(e);
+        anim.playSegments([120, 180], true);
+      } catch (err) {
+        console.error(err);
         flashBtn.innerText = "❌ Error";
+        anim.stop();
       }
     });
 
