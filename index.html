@@ -3,58 +3,79 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ESP Web Flasher</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.10.2/lottie.min.js"></script>
+  <title>Bruce Predatory Flasher</title>
+
+  <!-- TGS Player -->
+  <script src="https://unpkg.com/@telegram-web-apps/tgs-player"></script>
+
+  <!-- JetBrains Mono -->
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+
+  <!-- ESP Web Tools -->
+  <script type="module" src="https://unpkg.com/esp-web-tools@latest/dist/web/install-button.js?module"></script>
+
   <style>
     body {
-      background: #1e1e1e;
-      color: white;
+      background-color: #1e1e1e;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       align-items: center;
+      justify-content: center;
       height: 100vh;
-      font-family: monospace;
+      margin: 0;
       text-align: center;
     }
-    #anim {
+    tgs-player {
       width: 220px;
       height: 220px;
       margin-bottom: 20px;
     }
-    button {
-      background: #222;
+    h2 {
+      font-weight: 400;
+      font-size: 20px;
+      margin: 10px 0 30px 0;
+    }
+    button, esp-web-install-button {
+      background-color: #222;
       border: 1px solid #444;
       color: white;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
       padding: 10px 20px;
-      margin: 10px;
       border-radius: 10px;
       cursor: pointer;
+      margin: 5px;
+      transition: background-color 0.2s ease;
     }
-    button:hover {
-      background: #333;
+    button:hover, esp-web-install-button:hover {
+      background-color: #333;
+    }
+    footer {
+      position: absolute;
+      bottom: 20px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    footer span {
+      color: #ff4b4b;
     }
   </style>
 </head>
 <body>
 
-  <div id="anim"></div>
-  <h2>Let’s install firmware on yo device! 😎</h2>
-  <button>Select *.bin</button>
-  <button>Install firmware!</button>
-  <p style="margin-top: 40px; font-size: 12px; color: #aaa;">
-    Made with ❤️ by bakedtoastplease | Works with ESP-Web Flasher 💾
-  </p>
+  <!-- 🦆 Анимированный стикер -->
+  <tgs-player src="duck.tgs" autoplay loop></tgs-player>
 
-  <script>
-    lottie.loadAnimation({
-      container: document.getElementById('anim'),
-      renderer: 'svg',
-      loop: true,
-      autoplay: true,
-      path: 'sticker.json' // твой распакованный .tgs файл
-    });
-  </script>
+  <h2>Let’s install firmware on yo device! 😎</h2>
+
+  <!-- ⚙️ Кнопка установки -->
+  <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+
+  <footer>
+    Made with <span>❤</span> by bakedtoastplease | Powered by ESP-Web-Tools 💾
+  </footer>
 
 </body>
 </html>
