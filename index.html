@@ -3,20 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bruce Predatory Flasher</title>
-
-  <!-- TGS Player -->
-  <script src="https://unpkg.com/@telegram-web-apps/tgs-player"></script>
+  <title>Bruce Flasher</title>
 
   <!-- JetBrains Mono -->
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
 
-  <!-- ESP Web Tools -->
-  <script type="module" src="https://unpkg.com/esp-web-tools@latest/dist/web/install-button.js?module"></script>
+  <!-- TGS Player -->
+  <script src="https://unpkg.com/@telegram-web-apps/tgs-player"></script>
+
+  <!-- ESP Web Flasher Core -->
+  <script type="module" src="https://unpkg.com/esp-web-flasher@8.0.1/dist/webflasher.js?module"></script>
 
   <style>
     body {
-      background-color: #1e1e1e;
+      background: #1e1e1e;
       color: #fff;
       font-family: 'JetBrains Mono', monospace;
       display: flex;
@@ -27,17 +27,20 @@
       margin: 0;
       text-align: center;
     }
+
     tgs-player {
-      width: 220px;
-      height: 220px;
+      width: 200px;
+      height: 200px;
       margin-bottom: 20px;
     }
+
     h2 {
       font-weight: 400;
       font-size: 20px;
       margin: 10px 0 30px 0;
     }
-    button, esp-web-install-button {
+
+    input[type="file"], button {
       background-color: #222;
       border: 1px solid #444;
       color: white;
@@ -49,9 +52,11 @@
       margin: 5px;
       transition: background-color 0.2s ease;
     }
-    button:hover, esp-web-install-button:hover {
+
+    input[type="file"]:hover, button:hover {
       background-color: #333;
     }
+
     footer {
       position: absolute;
       bottom: 20px;
@@ -65,17 +70,56 @@
 </head>
 <body>
 
-  <!-- 🦆 Анимированный стикер -->
-  <tgs-player src="duck.tgs" autoplay loop></tgs-player>
-
+  <tgs-player src="sticker.json" autoplay loop></tgs-player>
   <h2>Let’s install firmware on yo device! 😎</h2>
 
-  <!-- ⚙️ Кнопка установки -->
-  <esp-web-install-button manifest="manifest.json"></esp-web-install-button>
+  <input type="file" id="firmwareFile" accept=".bin" />
+  <button id="flashBtn" disabled>Install firmware!</button>
 
   <footer>
-    Made with <span>❤</span> by bakedtoastplease | Powered by ESP-Web-Tools 💾
+    Made with <span>❤</span> by bakedtoastplease | Works with ESP Web Flasher 💾
   </footer>
 
+  <script type="module">
+    import { FlashClient } from "https://unpkg.com/esp-web-flasher@8.0.1/dist/webflasher.js";
+
+    const fileInput = document.getElementById("firmwareFile");
+    const flashBtn = document.getElementById("flashBtn");
+
+    let firmwareData = null;
+
+    fileInput.addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      firmwareData = new Uint8Array(await file.arrayBuffer());
+      flashBtn.disabled = false;
+    });
+
+    flashBtn.addEventListener("click", async () => {
+      try {
+        flashBtn.innerText = "Connecting...";
+        const port = await navigator.serial.requestPort();
+        const transport = new Transport(port);
+        const client = new FlashClient(transport, console);
+
+        await client.initialize();
+        flashBtn.innerText = "Flashing...";
+        await client.flash(firmwareData, 0x1000); // стандартный offset
+        await client.finish();
+        flashBtn.innerText = "✅ Done!";
+      } catch (e) {
+        console.error(e);
+        flashBtn.innerText = "❌ Error";
+      }
+    });
+
+    class Transport {
+      constructor(port) { this.port = port; }
+      async connect() { await this.port.open({ baudRate: 115200 }); }
+      async disconnect() { await this.port.close(); }
+      async write(data) { const writer = this.port.writable.getWriter(); await writer.write(data); writer.releaseLock(); }
+      async read() { const reader = this.port.readable.getReader(); const { value } = await reader.read(); reader.releaseLock(); return value; }
+    }
+  </script>
 </body>
 </html>
